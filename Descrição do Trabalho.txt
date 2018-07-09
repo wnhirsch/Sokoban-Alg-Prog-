@@ -1,0 +1,59 @@
+O trabalho foi feito a partir de um teste de verificação de consistencia de arquivos feito da seguinte forma:
+- Será testado se o arquivo que armazena o escore "highscore.bin" já existe e caso contrário será criado um e também sera verificado a existência dos arquivos "nivel1.txt", "nivel2.txt", "nivel3.txt". Caso o arquivo de escore não possa ser criado ou algum desses arquivos de niveis não exista, será exibido uma mensagem de erro dizendo que não será possivel iniciar o jogo sem tais requisitos.
+
+Caso tudo ocora bem ele inicia um Menu Principal personalizado com as 4 seguintes instruções: Start Game, Escore, Instruções e Quit.
+
+*Na Start Game o programa imprime a estrutura basica do jogo, contornos e opções do menu e exige o nome do usuário com no máximo 20 caractéres. Ao digitar o nome será buscado se há arquivos de partidas pausadas ou salvas no nome do jogador, caso haja a de pausa será reiniciada imediatamente (sem escolha do jogador) a partida salva e o arquivo "pausa.bin" será excluido, caso contrário sera verificado se há algum arquivo de jogo salvo e perguntará ao usuário qual deles ele deseja reiniciar (1 até infinito). Dada a sua escolha o jogo sera iniciado com os dados zerados ou não dependendo dessa introdução e o jogador deve inserir os cubos restantes nas posições ocultas geradas randomicamente. É utilizado as teclas direcionais UP, DOWN, LEFT e RIGHT para a movimentação do jogador e as seguintes teclas para outras opções:
+	- 'N' e 'n' - executa a função NOVO JOGO que consiste em salvar todos os dados atuais do jogador em um arquivo "nomedojogador001.txt" e iniciar um novo jogo
+	- 'S' e 's' - executa a função SALVAR que consiste em salvar todos os dados atuais do jogador em um arquivo "nomedojogador001.txt"
+	- 'P' e 'p' - executa a função PAUSAR que consiste em salvar todos os dados atuais do jogador em um arquivo "pausa.bin" e pausa o jogo até o jogador inserir a tecla ENTER(Tentamos inserir como opção também o recebimento das teclas 'P' e 'P' porém não conseguimos devido a tecla DOWN pois seu 2° byte possui o inteiro 80 semelhante ao caractere 'P')
+	- 'E' e 'e' - executa a função ESCORE que consiste em ler o arquivo "highscore.bin" e exbir as 10 primeiras pontuações escritas nele
+	- 'Q' e 'q' - executa a função QUIT que consiste em voltar para o Menu Principal
+	- TAB - pausa o jogo e vai para o Menu Superior do qual possui as opções: NOVO JOGO, SALVAR, PAUSAR, ESCORE e QUIT
+		- ESC - retorna para a partida
+		- TAB - alterna entre as opções ja mencionadas
+		- ENTER - executa a opção em realce
+O jogo termina quando todos os cubos dos 3 niveis forem inseridos na posição certa e quando isso ocorrer sera exibido o escore completo e pedido um nome novamente para uma nova partida.
+
+*Na Escore ele carrega o arquivo "highscore.bin" (que com certeza existe pois já foi feito testes, porém qualquer coisa caso haja erro o programa é abortado) e le somente os 10 primeiros escores do arquivo.
+    - Essa parte foi feita diferente do enunciado, pois não achamos eficaz salvar aleatoriamente e depois ter que separar os 10 melhores, então resolvemos já salvar organizado e para ler só pegar os 10 primeiros do arquivo. Implementamos o algoritmo da seguinte forma: Dado um nome de um jogador e um escore, ele busca o nome do jogador em algum lugar do arquivo, caso ache verifica se o novo escore é maior que o escrito do arquivo, se for escreve, se não for fecha o arquivo e não salva nada, porém caso ele nao ache o nome do arquivo ele vai dar um "rewind" no arquivo e vai comparar os escores. Se o arquivo estiver vazio (no caso se ele terminar tambem/chegar no EOF) ele simplesmente escreve no fim do arquivo, se o valor que eu estou lendo agora no arquivo for maior que o o valor que eu quero inserir, ele pula para o próximo, porém caso seja menor ou igual, o novo escore vai ser inserido nesse respectivo local e os antecessores dele serão arrastados para trás. Assim asseguramos que o arquivo sempre esteja ordenado.
+
+*Nas Instruções é mostrada uma breve explicação dos comendos básicos do jogo, aparência de cada item do jogo, entre outras informações.
+
+*Na Quit aparece uma mensagem de despedida ao usuario e encerra o programa
+
+------------------------------------------
+
+Nós utilizamos 3 estruturas e um tipo enumerável para melhor eficiência e clareza nos dados:
+
+* player_st (struct): representa todos os dados do jogador atual criado somente uma vez a cada execução da opção Start Game no Menu Principal ou reiniciando a função no Menu Superior na opção Novo Jogo.
+	- player_name - representa o nome do jogador do qual possue no máximo 20 caractéres
+	- current_level - representa o nivel atual do jogador, onde por padrão é 1 a não ser que já haja alguma PARTIDA anterior salva com o nivel superior.
+	- cubes_ok - representa quantos cubos o jogador acertou na PARTIDA atual, sendo zerado a cada nivel. É usado para fins de impressão ao usuário e entendimento do estado atual do jogo
+	- levels_ok - representa a quantidade de niveis em que o jogador consegui acertar todos os cubos que aquele nivel possuia.
+	- num_moves_actual - representa a quantidade de movimentos realizado pelo jogador NA PARTIDA atual para fins de impressão ao usuário.
+	- num_moves_total - representa a quantidade de movimentos realizado pelo jogador NO JOGO INTEIRO para fins de contagem do escore.
+	- game_time_actual - representa o tempo do jogador na PARTIDA atual para fins de impressão ao usuário e controle de jogo para ele terminar caso o limite seja alcançado (N° de Cubos * 20)
+	- game_time_total - representa o tempo do jogador NO JOGO INTEIRO para fins de contagem do escore.
+	- last_score - representa o maior escore que o jogador já fez caso o mesmo esteja salvo no arquivo "highscore.bin", caso contrário é 0
+	- score_total - representa o escore total do jogador no jogo.
+
+* pause_st (struct): representa todos os dados que devem ser salvos no arquivo "pausa.bin" quando o jogador pausar o jogo.
+	- actual_level - representa a matriz que contém os dados do nivel atual contendo as posições de cada 
+	- actual_player - representa todos os dados do jogador baseado na estrutura 'player_st' explicada anteriormente
+
+* score_st (struct): representa todos os dados a serem salvos no arquivo "highscore.bin" quando o jogador pedir para ler o escore ou ao fim dos jogos para salvar sua pontuação
+	- player_name - representa o nome do jogador, dono do escore
+	- player_score - representa o escore do jogador
+
+* situation (enum): representa todas os possiveis que podem ocorrer em alguma partida. Foi feito com o intuito de clarear o entendimento do código.
+	- normal_game - representa o estado normal do jogo que é ele acontecendo com o tempo rodando normalmente.
+	- win_level - representa a vitoria de um jogador NO NIVEL atual dele
+	- win_game - representa a vitoria de um jogador sobre TODOS OS NIVEIS
+	- lose_game - representa a derrota de um jogador sobre algum NIVEL
+	- new_game - representa quando o jogador quer sair e reiniciar todo o jogo
+	- exit_game - representa quando o jogador quer sair do jogo/voltar ao Menu Principal
+
+---------------------------------------------
+
+Para ser compilado os arquivos .c e .h devem estar em um local com permissão de escrita, por exemplo em alguma pasta na área de trabalho ou algo assim para não haver erros na escrita dos arquivos de pausa, escore e de jogos salvos, juntamente com OS TRÊS arquivos de nivel. É imprecindível a presença DOS TRÊS pois sem eles o jogo exibe uma mensagem de erro. Feito isso deve ser criado um projeto no mesmo diretório e inserir todos os arquivos nele. Após isso é só compilar que ele executa. :)
